@@ -1,0 +1,72 @@
+name: Release
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: ${{ github.repository }}
+  FULL_VERSION: ""
+  MAJOR_VERSION: ""
+  MINOR_VERSION: ""
+  PATCH_VERSION: ""
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      - name: Check for the latest stable version
+        run: |
+          FULL_VERSION=$(curl -Ls https://api.github.com/repos/caddyserver/caddy/releases/latest | grep "tag_name" | cut -d : -f 2 | tr -d \" | tr -d "," | tr -d "v" | tr -d "[:space:]")
+          MAJOR_VERSION=$(cut -d '.' -f 1 <(echo $FULL_VERSION))
+          MINOR_VERSION=$(cut -d '.' -f 2 <(echo $FULL_VERSION))
+          PATCH_VERSION=$(cut -d '.' -f 3 <(echo $FULL_VERSION))
+
+          echo "FULL_VERSION="$FULL_VERSION"" >> $GITHUB_ENV
+          echo "MAJOR_VERSION="$MAJOR_VERSION"" >> $GITHUB_ENV
+          echo "MINOR_VERSION="$MINOR_VERSION"" >> $GITHUB_ENV
+          echo "PATCH_VERSION="$PATCH_VERSION"" >> $GITHUB_ENV
+      
+      - name: Login to the Docker Hub Registry
+        uses: docker/login-action@v2
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Check if the official release was already published to the Docker Registry
+        id: docker_official_release_check
+        continue-on-error: true
+        run: |
+          docker manifest inspect caddy:${{ env.FULL_VERSION }}
+      
+      - name: Check if the release was already published to the Docker Registry
+        id: docker_release_check
+        continue-on-error: true
+        run: |
+          docker manifest inspect ${IMAGE_NAME}:${{ env.FULL_VERSION }}
+      
+      - name: Build the Docker image and publish to the Docker Registry
+        uses: docker/build-push-action@v3
+        if: ${{ steps.docker_official_release_check.outcome == 'success' && steps.docker_release_check.outcome == 'failure' }}
+        with:
+          context: .
+          push: true
+          build-args: |
+            VERSION=${{ env.FULL_VERSION }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.FULL_VERSION }}
+            ${{ env.IMAGE_NAME }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}
+            ${{ env.IMAGE_NAME }}:${{ env.MAJOR_VERSION }}
+            ${{ env.IMAGE_NAME }}:latest
+      
+      - name: Update Docker Hub Description
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
