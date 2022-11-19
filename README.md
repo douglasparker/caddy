@@ -11,17 +11,59 @@ Caddy docker image with the Cloudflare DNS provider module.
 
 ### Docker Run
 
-```docker
-docker run -it --name caddy \
-  -p 80:80/tcp \
-  -p 443:443 \
-  -v ./data:/data \
-  -v ./config:/config \
-  -v ./Caddyfile:/etc/caddy/Caddyfile \
-  -e CLOUDFLARE_EMAIL=me@example.com \
-  -e CLOUDFLARE_API_TOKEN=12345 \
-  -e ACME_AGREE=true \
-  douglasparker/caddy-cloudflare 
+```bash
+docker run --detach \
+  --name caddy \
+  --env CLOUDFLARE_EMAIL=<email> \
+  --env CLOUDFLARE_API_TOKEN=<api-token> \
+  --env ACME_AGREE=true \
+  --volume ./data:/data \
+  --volume ./config:/config \
+  --volume ./Caddyfile:/etc/caddy/Caddyfile \
+  --publish 80:80/tcp \
+  --publish 443:443/tcp \
+  --publish 443:443/udp \
+  --restart=unless-stopped \
+  douglasparker/caddy-cloudflare:latest
 ```
 
 ### Docker Compose
+
+```yaml
+services:
+  caddy:
+    image: douglasparker/caddy-cloudflare:latest
+    container_name: caddy
+    environment:
+      - CLOUDFLARE_EMAIL=<email>
+      - CLOUDFLARE_API_TOKEN=<api-token>
+      - ACME_AGREE=true
+    volumes:
+      - ./data:/data
+      - ./config:/config
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    ports:
+      - "80:80/tcp"
+      - "443:443/tcp"
+      - "443:443/udp"
+    restart: unless-stopped
+```
+
+### Caddyfile
+
+*Global configuration:*
+
+```conf
+{
+    email {env.CLOUDFLARE_EMAIL}
+    acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+}
+```
+
+*Per-site configuration:*
+
+```conf
+tls {env.CLOUDFLARE_EMAIL} { 
+  dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+}
+```
