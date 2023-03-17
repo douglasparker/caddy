@@ -24,7 +24,7 @@ docker run --detach \
   --publish 443:443/tcp \
   --publish 443:443/udp \
   --restart=unless-stopped \
-  douglasparker/caddy-cloudflare:latest
+  ghcr.io/douglasparker/caddy-cloudflare:latest
 ```
 
 ### Docker Compose
@@ -32,7 +32,7 @@ docker run --detach \
 ```yaml
 services:
   caddy:
-    image: douglasparker/caddy-cloudflare:latest
+    image: ghcr.io/douglasparker/caddy-cloudflare:latest
     container_name: caddy
     environment:
       - CLOUDFLARE_EMAIL=<email>
