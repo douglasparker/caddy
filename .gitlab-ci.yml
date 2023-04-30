@@ -50,25 +50,25 @@ build:docker:
       fi
       set -e
 
-  publish:docker:
-    image: docker:23
-    stage: build
-    needs: ["build:docker"]
-    dependencies: ["build:docker"]
-    only:
-      - schedules
-      - triggers
-    script:
-    - |
-      set +e
-      docker manifest inspect "$CI_REGISTRY_IMAGE:$FULL_VERSION"
-      if [ $? -ne 0 ]; then
-        docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password "$CI_REGISTRY_PASSWORD"
+publish:docker:
+  image: docker:23
+  stage: build
+  needs: ["build:docker"]
+  dependencies: ["build:docker"]
+  only:
+    - schedules
+    - triggers
+  script:
+  - |
+    set +e
+    docker manifest inspect "$CI_REGISTRY_IMAGE:$FULL_VERSION"
+    if [ $? -ne 0 ]; then
+      docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password "$CI_REGISTRY_PASSWORD"
 
-        docker load --input "$CI_PROJECT_DIR/docker.tar"
+      docker load --input "$CI_PROJECT_DIR/docker.tar"
 
-        docker push "$CI_REGISTRY_IMAGE:$FULL_VERSION"
-        docker push "$CI_REGISTRY_IMAGE:$MAJOR_VERSION.$MINOR_VERSION"
-        docker push "$CI_REGISTRY_IMAGE:$MAJOR_VERSION"
-      fi
-      set -e
+      docker push "$CI_REGISTRY_IMAGE:$FULL_VERSION"
+      docker push "$CI_REGISTRY_IMAGE:$MAJOR_VERSION.$MINOR_VERSION"
+      docker push "$CI_REGISTRY_IMAGE:$MAJOR_VERSION"
+    fi
+    set -e
