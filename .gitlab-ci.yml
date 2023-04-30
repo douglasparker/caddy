@@ -37,7 +37,7 @@ build:docker:
       set +e
       docker manifest inspect "$CI_REGISTRY_IMAGE:$FULL_VERSION"
       if [ $? -ne 0 ]; then
-        docker build \
+        docker build --build-arg VERSION="$FULL_VERSION" \
           -t "$CI_REGISTRY_IMAGE:$FULL_VERSION" \
           -t "$CI_REGISTRY_IMAGE:$MAJOR_VERSION.$MINOR_VERSION" \
           -t "$CI_REGISTRY_IMAGE:$MAJOR_VERSION" \
