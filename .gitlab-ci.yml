@@ -1,0 +1,74 @@
+variables:
+  FULL_VERSION: ""
+  MAJOR_VERSION: ""
+  MINOR_VERSION: ""
+  PATCH_VERSION: ""
+
+build:docker:
+  image: docker:23
+  stage: build
+  only:
+    - schedules
+    - triggers
+  artifacts:
+    paths:
+      - docker.tar
+    reports:
+      dotenv: build.env
+    expire_in: 10 mins
+  before_script:
+    - |
+      apk update
+      apk add curl
+  script:
+    - |
+      FULL_VERSION=$(curl -Ls https://api.github.com/repos/caddyserver/caddy/releases/latest | grep "tag_name" | cut -d : -f 2 | tr -d \" | tr -d "," | tr -d "v" | tr -d "[:space:]")
+      MAJOR_VERSION=$(cut -d '.' -f 1 <(echo $FULL_VERSION))
+      MINOR_VERSION=$(cut -d '.' -f 2 <(echo $FULL_VERSION))
+      PATCH_VERSION=$(cut -d '.' -f 3 <(echo $FULL_VERSION))
+
+      echo "FULL_VERSION="$FULL_VERSION"" >> build.env
+      echo "MAJOR_VERSION="$MAJOR_VERSION"" >> build.env
+      echo "MINOR_VERSION="$MINOR_VERSION"" >> build.env
+      echo "PATCH_VERSION="$PATCH_VERSION"" >> build.env
+
+      docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password "$CI_REGISTRY_PASSWORD"
+
+      set +e
+      docker manifest inspect "$CI_REGISTRY_IMAGE:$FULL_VERSION"
+      if [ $? -ne 0 ]; then
+        docker build --build-arg BYOND_MAJOR="$BYOND_MAJOR_VERSION" --build-arg BYOND_MINOR="$BYOND_MINOR_VERSION" \
+          -t "$CI_REGISTRY_IMAGE:$FULL_VERSION" \
+          -t "$CI_REGISTRY_IMAGE:$MAJOR_VERSION.$MINOR_VERSION" \
+          -t "$CI_REGISTRY_IMAGE:$MAJOR_VERSION" \
+          .
+        
+        docker save --output "$CI_PROJECT_DIR/docker.tar" \
+        "$CI_REGISTRY_IMAGE:$FULL_VERSION" \
+          "$CI_REGISTRY_IMAGE:$MAJOR_VERSION.$MINOR_VERSION" \
+          "$CI_REGISTRY_IMAGE:$MAJOR_VERSION"
+      fi
+      set -e
+
+  publish:docker:
+    image: docker:23
+    stage: build
+    needs: ["build:docker"]
+    dependencies: ["build:docker"]
+    only:
+      - schedules
+      - triggers
+    script:
+    - |
+      set +e
+      docker manifest inspect "$CI_REGISTRY_IMAGE:$FULL_VERSION"
+      if [ $? -ne 0 ]; then
+        docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password "$CI_REGISTRY_PASSWORD"
+
+        docker load --input "$CI_PROJECT_DIR/docker.tar"
+
+        docker push "$CI_REGISTRY_IMAGE:$FULL_VERSION"
+        docker push "$CI_REGISTRY_IMAGE:$MAJOR_VERSION.$MINOR_VERSION"
+        docker push "$CI_REGISTRY_IMAGE:$MAJOR_VERSION"
+      fi
+      set -e
