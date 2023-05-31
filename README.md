@@ -16,6 +16,7 @@ docker run --detach \
   --name caddy \
   --env CLOUDFLARE_EMAIL=<email> \
   --env CLOUDFLARE_API_TOKEN=<api-token> \
+  --env GOOGLE_API_TOKEN=<api-token> \
   --env ACME_AGREE=true \
   --volume ./data:/data \
   --volume ./config:/config \
@@ -37,6 +38,7 @@ services:
     environment:
       - CLOUDFLARE_EMAIL=<email>
       - CLOUDFLARE_API_TOKEN=<api-token>
+      - GOOGLE_API_TOKEN=<api-token>
       - ACME_AGREE=true
     volumes:
       - ./data:/data
@@ -49,21 +51,45 @@ services:
     restart: unless-stopped
 ```
 
-### Caddyfile
+## Modules
 
-*Global configuration:*
+### Cloudflare DNS
+
+**Caddyfile:** (Global configuration)
 
 ```conf
 {
-    email {env.CLOUDFLARE_EMAIL}
-    acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	email {env.CLOUDFLARE_EMAIL}
+	acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
 }
 ```
 
-*Per-site configuration:*
+**Caddyfile:** (Per-site configuration)
 
 ```conf
-tls {env.CLOUDFLARE_EMAIL} { 
-  dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+example.com {
+	tls {env.CLOUDFLARE_EMAIL} { 
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	}
+}
+```
+
+### Google Domains DNS
+
+**Caddyfile:** (Global configuration)
+
+```conf
+{
+	acme_dns google_domains {env.GOOGLE_API_TOKEN}
+}
+```
+
+**Caddyfile:** (Per-site configuration)
+
+```conf
+example.com {
+	tls { 
+		dns google_domains {env.GOOGLE_API_TOKEN}
+	}
 }
 ```
