@@ -1,9 +1,9 @@
 ARG VERSION
 
-FROM caddy:builder AS builder
+FROM caddy:${VERSION}-builder AS builder
 
-RUN caddy-builder \
-    github.com/caddy-dns/cloudflare
+RUN xcaddy build \
+    --with github.com/caddy-dns/cloudflare
 
 FROM caddy:${VERSION}
 
