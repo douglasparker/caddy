@@ -72,3 +72,81 @@ publish:docker:
       docker push "$CI_REGISTRY_IMAGE:$MAJOR_VERSION"
     fi
     set -e
+
+build:docker-prerelease:
+  image: docker:23
+  stage: build
+  only:
+    - schedules
+    - triggers
+  artifacts:
+    paths:
+      - docker.tar
+    reports:
+      dotenv: build.env
+    expire_in: 10 mins
+  before_script:
+    - |
+      apk update
+      apk add curl
+  script:
+    - |
+      FULL_VERSION=$(jq -r 'map(select(.prerelease)) | first | .tag_name' <<< $(curl -Ls https://api.github.com/repos/caddyserver/caddy/releases) | cut -d : -f 2 | tr -d \" | tr -d "," | tr -d "v" | tr -d "[:space:]")
+      echo "FULL_VERSION="$FULL_VERSION"" >> build.env
+
+      if [ $FULL_VERSION -ne "null" ];
+        MAJOR_VERSION=$(cut -d '.' -f 1 <(echo $FULL_VERSION))
+        MINOR_VERSION=$(cut -d '.' -f 2 <(echo $FULL_VERSION))
+        PATCH_VERSION=$(cut -d '-' -f 1 <(cut -d '.' -f 3 <(echo $FULL_VERSION)))
+        PRERELEASE_VERSION=$(cut -d '-' -f 2 <(echo $FULL_VERSION))
+        PRERELEASE_TYPE=$(cut -d '-' -f 2 <(echo $FULL_VERSION) | cut -d '.' -f 1)
+
+        echo "MAJOR_VERSION="$MAJOR_VERSION"" >> build.env
+        echo "MINOR_VERSION="$MINOR_VERSION"" >> build.env
+        echo "PATCH_VERSION="$PATCH_VERSION"" >> build.env
+        echo "PRERELEASE_VERSION="$PRERELEASE_VERSION"" >> build.env
+        echo "PRERELEASE_TYPE="$PRERELEASE_TYPE"" >> build.env
+
+        docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password "$CI_REGISTRY_PASSWORD"
+
+        set +e
+        docker manifest inspect "$CI_REGISTRY_IMAGE:$FULL_VERSION"
+        if [ $? -ne 0 ]; then
+          docker build --build-arg VERSION="$FULL_VERSION" \
+            -t "$CI_REGISTRY_IMAGE:$FULL_VERSION" \
+            -t "$CI_REGISTRY_IMAGE:$MAJOR_VERSION.$MINOR_VERSION-$PRERELEASE_TYPE" \
+            -t "$CI_REGISTRY_IMAGE:$MAJOR_VERSION-$PRERELEASE_TYPE" \
+            .
+          
+          docker save --output "$CI_PROJECT_DIR/docker.tar" \
+            "$CI_REGISTRY_IMAGE:$FULL_VERSION" \
+            "$CI_REGISTRY_IMAGE:$MAJOR_VERSION.$MINOR_VERSION-$PRERELEASE_TYPE" \
+            "$CI_REGISTRY_IMAGE:$MAJOR_VERSION-$PRERELEASE_TYPE"
+        fi
+        set -e
+      fi
+      
+publish:docker-beta:
+  image: docker:23
+  stage: build
+  needs: ["build:docker-prerelease"]
+  dependencies: ["build:docker-prerelease"]
+  only:
+    - schedules
+    - triggers
+  script:
+  - |
+    if [ $FULL_VERSION -ne "null" ];
+      set +e
+      docker manifest inspect "$CI_REGISTRY_IMAGE:$FULL_VERSION"
+      if [ $? -ne 0 ]; then
+        docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password "$CI_REGISTRY_PASSWORD"
+
+        docker load --input "$CI_PROJECT_DIR/docker.tar"
+
+        docker push "$CI_REGISTRY_IMAGE:$FULL_VERSION"
+        docker push "$CI_REGISTRY_IMAGE:$MAJOR_VERSION.$MINOR_VERSION-$PRERELEASE_TYPE"
+        docker push "$CI_REGISTRY_IMAGE:$MAJOR_VERSION-$PRERELEASE_TYPE"
+      fi
+      set -e
+    fi
