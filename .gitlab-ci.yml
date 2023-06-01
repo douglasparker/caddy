@@ -91,7 +91,7 @@ build:docker-prerelease:
       apk add curl
   script:
     - |
-      FULL_VERSION=$(jq -r 'map(select(.prerelease)) | first | .tag_name' <<< $(curl -Ls https://api.github.com/repos/caddyserver/caddy/releases) | cut -d : -f 2 | tr -d \" | tr -d "," | tr -d "v" | tr -d "[:space:]")
+      FULL_VERSION=$(curl -Ls https://api.github.com/repos/caddyserver/caddy/releases | jq -r 'map(select(.prerelease)) | first | .tag_name' | cut -d : -f 2 | tr -d \" | tr -d "," | tr -d "v" | tr -d "[:space:]")
       echo "FULL_VERSION="$FULL_VERSION"" >> build.env
 
       if [ $FULL_VERSION -ne "null" ];
@@ -125,7 +125,7 @@ build:docker-prerelease:
         fi
         set -e
       fi
-      
+
 publish:docker-beta:
   image: docker:23
   stage: build
