@@ -94,7 +94,7 @@ build:docker-prerelease:
       FULL_VERSION=$(curl -Ls https://api.github.com/repos/caddyserver/caddy/releases | jq -r 'map(select(.prerelease)) | first | .tag_name' | cut -d : -f 2 | tr -d \" | tr -d "," | tr -d "v" | tr -d "[:space:]")
       echo "FULL_VERSION="$FULL_VERSION"" >> build.env
 
-      if [ "$FULL_VERSION" -ne "null" ]; then
+      if [ "$FULL_VERSION" != "null" ]; then
         MAJOR_VERSION=$(cut -d '.' -f 1 <(echo $FULL_VERSION))
         MINOR_VERSION=$(cut -d '.' -f 2 <(echo $FULL_VERSION))
         PATCH_VERSION=$(cut -d '-' -f 1 <(cut -d '.' -f 3 <(echo $FULL_VERSION)))
@@ -136,7 +136,7 @@ publish:docker-prerelease:
     - triggers
   script:
   - |
-    if [ "$FULL_VERSION" -ne "null" ]; then
+    if [ "$FULL_VERSION" != "null" ]; then
       set +e
       docker manifest inspect "$CI_REGISTRY_IMAGE:$FULL_VERSION"
       if [ $? -ne 0 ]; then
