@@ -88,7 +88,7 @@ build:docker-prerelease:
   before_script:
     - |
       apk update
-      apk add curl
+      apk add curl jq
   script:
     - |
       FULL_VERSION=$(curl -Ls https://api.github.com/repos/caddyserver/caddy/releases | jq -r 'map(select(.prerelease)) | first | .tag_name' | cut -d : -f 2 | tr -d \" | tr -d "," | tr -d "v" | tr -d "[:space:]")
