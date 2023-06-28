@@ -53,7 +53,7 @@ jobs:
           docker manifest inspect ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.FULL_VERSION }}
       
       - name: Build the Docker image and publish to the Docker Registry
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         if: ${{ steps.docker_official_release_check.outcome == 'success' && steps.docker_release_check.outcome == 'failure' }}
         with:
           context: .
