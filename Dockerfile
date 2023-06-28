@@ -8,4 +8,6 @@ RUN xcaddy build \
 
 FROM caddy:${VERSION}
 
+LABEL org.opencontainers.image.source https://github.com/douglasparker/caddy
+
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
