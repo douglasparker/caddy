@@ -39,13 +39,6 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          logout: false
-      
-      - name: Check if the official release was already published to the Docker Registry
-        id: docker_official_release_check
-        continue-on-error: true
-        run: |
-          docker manifest inspect caddy:${{ env.FULL_VERSION }}
       
       - name: Check if the release was already published to the Docker Registry
         id: docker_release_check
@@ -55,7 +48,7 @@ jobs:
       
       - name: Build the Docker image and publish to the Docker Registry
         uses: docker/build-push-action@v4
-        if: ${{ steps.docker_official_release_check.outcome == 'success' && steps.docker_release_check.outcome == 'failure' }}
+        if: ${{ steps.docker_release_check.outcome == 'failure' }}
         with:
           context: .
           push: true
