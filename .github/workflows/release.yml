@@ -39,6 +39,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
       
       - name: Check if the official release was already published to the Docker Registry
         id: docker_official_release_check
