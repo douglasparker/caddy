@@ -41,12 +41,14 @@ build:docker:
           -t "$CI_REGISTRY_IMAGE:$FULL_VERSION" \
           -t "$CI_REGISTRY_IMAGE:$MAJOR_VERSION.$MINOR_VERSION" \
           -t "$CI_REGISTRY_IMAGE:$MAJOR_VERSION" \
+          -t "$CI_REGISTRY_IMAGE:latest" \
           .
         
         docker save --output "$CI_PROJECT_DIR/docker.tar" \
         "$CI_REGISTRY_IMAGE:$FULL_VERSION" \
           "$CI_REGISTRY_IMAGE:$MAJOR_VERSION.$MINOR_VERSION" \
-          "$CI_REGISTRY_IMAGE:$MAJOR_VERSION"
+          "$CI_REGISTRY_IMAGE:$MAJOR_VERSION" \
+          "$CI_REGISTRY_IMAGE:latest"
       fi
       set -e
 
@@ -70,6 +72,7 @@ publish:docker:
       docker push "$CI_REGISTRY_IMAGE:$FULL_VERSION"
       docker push "$CI_REGISTRY_IMAGE:$MAJOR_VERSION.$MINOR_VERSION"
       docker push "$CI_REGISTRY_IMAGE:$MAJOR_VERSION"
+      docker push "$CI_REGISTRY_IMAGE:latest"
     fi
     set -e
 
