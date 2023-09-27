@@ -46,7 +46,7 @@ jobs:
           docker manifest inspect caddy:${{ env.FULL_VERSION }}-builder
       
       - name: Login to the Docker Hub Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
