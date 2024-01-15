@@ -7,8 +7,6 @@
 
 A Caddy docker image built with useful Caddy modules.
 
-<img src = "https://cdn.douglasparker.dev/images/caddy/logo-dark.png" />
-
 ## Usage
 
 ### Docker Run
