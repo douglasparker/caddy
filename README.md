@@ -1,6 +1,6 @@
-<img src = "https://cdn.douglasparker.dev/images/caddy/logo-dark.png" />
-
 # Caddy
+
+<img src = "https://cdn.douglasparker.dev/images/caddy/logo-dark.png" />
 
 [![Version](https://img.shields.io/docker/v/douglasparker/caddy-cloudflare?style=flat-square&sort=semver)](https://hub.docker.com/r/douglasparker/caddy-cloudflare)
 [![Docker Pulls](https://img.shields.io/docker/pulls/douglasparker/caddy-cloudflare?style=flat-square)](https://hub.docker.com/r/douglasparker/caddy-cloudflare)
