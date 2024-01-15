@@ -1,4 +1,6 @@
-# caddy-cloudflare
+# Caddy
+
+<img src = "https://cdn.douglasparker.dev/images/caddy/logo-dark.png" />
 
 [![Version](https://img.shields.io/docker/v/douglasparker/caddy-cloudflare?style=flat-square&sort=semver)](https://hub.docker.com/r/douglasparker/caddy-cloudflare)
 [![Docker Pulls](https://img.shields.io/docker/pulls/douglasparker/caddy-cloudflare?style=flat-square)](https://hub.docker.com/r/douglasparker/caddy-cloudflare)
@@ -16,16 +18,14 @@ docker run --detach \
   --name caddy \
   --env CLOUDFLARE_EMAIL=<email> \
   --env CLOUDFLARE_API_TOKEN=<api-token> \
-  --env GOOGLE_API_TOKEN=<api-token> \
   --env ACME_AGREE=true \
   --volume ./data:/data \
   --volume ./config:/config \
   --volume ./Caddyfile:/etc/caddy/Caddyfile \
-  --publish 80:80/tcp \
   --publish 443:443/tcp \
   --publish 443:443/udp \
   --restart=unless-stopped \
-  ghcr.io/douglasparker/caddy-cloudflare:latest
+  registry.douglasparker.dev/caddy/caddy:latest
 ```
 
 ### Docker Compose
@@ -33,19 +33,17 @@ docker run --detach \
 ```yaml
 services:
   caddy:
-    image: ghcr.io/douglasparker/caddy-cloudflare:latest
+    image: registry.douglasparker.dev/caddy/caddy:latest
     container_name: caddy
     environment:
       - CLOUDFLARE_EMAIL=<email>
       - CLOUDFLARE_API_TOKEN=<api-token>
-      - GOOGLE_API_TOKEN=<api-token>
       - ACME_AGREE=true
     volumes:
       - ./data:/data
       - ./config:/config
       - ./Caddyfile:/etc/caddy/Caddyfile
     ports:
-      - "80:80/tcp"
       - "443:443/tcp"
       - "443:443/udp"
     restart: unless-stopped
@@ -70,26 +68,6 @@ services:
 example.com {
 	tls {env.CLOUDFLARE_EMAIL} { 
 		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
-	}
-}
-```
-
-### Google Domains DNS
-
-**Caddyfile:** (Global configuration)
-
-```conf
-{
-	acme_dns google_domains {env.GOOGLE_API_TOKEN}
-}
-```
-
-**Caddyfile:** (Per-site configuration)
-
-```conf
-example.com {
-	tls { 
-		dns google_domains {env.GOOGLE_API_TOKEN}
 	}
 }
 ```
