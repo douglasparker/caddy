@@ -5,9 +5,9 @@
 [![Image Size](https://img.shields.io/docker/image-size/douglasparker/caddy-cloudflare?style=flat-square)](https://hub.docker.com/r/douglasparker/caddy-cloudflare)
 [![License](https://img.shields.io/github/license/douglasparker/caddy-cloudflare?style=flat-square)](https://github.com/douglasparker/caddy-cloudflare/blob/main/LICENSE.md)
 
-<img src = "https://cdn.douglasparker.dev/images/caddy/logo-dark.png" />
-
 A Caddy docker image built with useful Caddy modules.
+
+<img src = "https://cdn.douglasparker.dev/images/caddy/logo-dark.png" />
 
 ## Usage
 
